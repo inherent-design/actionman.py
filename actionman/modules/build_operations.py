@@ -13,7 +13,13 @@ import shutil
 import time
 from typing import List, Optional
 
-from ..utils import colorize, print_separator, run_command, CMAKE_BUILD_MAP
+from ..utils import (
+    colorize,
+    print_separator,
+    run_command,
+    handle_errors,
+    CMAKE_BUILD_MAP,
+)
 
 
 class BuildOperations:
@@ -42,7 +48,9 @@ class BuildOperations:
         Raises:
             SystemExit: If configuration fails or build type is invalid
         """
-        try:
+
+        @handle_errors
+        def _configure(self, build_type: str, flags: List[str]):
             # Create build directory if it doesn't exist
             os.makedirs(self.build_dir, exist_ok=True)
 
@@ -84,13 +92,8 @@ class BuildOperations:
             print_separator(
                 f"END CONFIGURE ({build_type.upper()}) - {elapsed:.2f}s", "green"
             )
-        except subprocess.CalledProcessError as e:
-            print(colorize(f"Configuration failed: {e}", "red"))
-            sys.exit(1)
-        except KeyError:
-            print(colorize(f"Invalid build type: {build_type}", "red"))
-            print(f"Available build types: {', '.join(CMAKE_BUILD_MAP.keys())}")
-            sys.exit(1)
+
+        _configure(self, build_type, flags)
 
     def build(self, build_type: str = "debug", flags: List[str] = []) -> None:
         """Build the specified configuration.
@@ -102,7 +105,9 @@ class BuildOperations:
         Raises:
             SystemExit: If build fails or build type is invalid
         """
-        try:
+
+        @handle_errors
+        def _build(self, build_type: str, flags: List[str]):
             self.configure(build_type, flags)
 
             print_separator(f"BEGIN BUILD OUTPUT ({build_type.upper()})", "cyan")
@@ -128,13 +133,8 @@ class BuildOperations:
             print_separator(
                 f"END BUILD OUTPUT ({build_type.upper()}) - {elapsed:.2f}s", "green"
             )
-        except subprocess.CalledProcessError as e:
-            print(colorize(f"{build_type.capitalize()} build failed: {e}", "red"))
-            sys.exit(1)
-        except KeyError:
-            print(colorize(f"Invalid build type: {build_type}", "red"))
-            print(f"Available build types: {', '.join(CMAKE_BUILD_MAP.keys())}")
-            sys.exit(1)
+
+        _build(self, build_type, flags)
 
     def build_all(self) -> None:
         """Build all configurations (debug, profile, release)."""
@@ -174,7 +174,9 @@ class BuildOperations:
         Raises:
             SystemExit: If installation fails
         """
-        try:
+
+        @handle_errors
+        def _install(self, build_type: str, prefix: Optional[str]):
             # Ensure the build exists
             if not os.path.exists(self.build_dir):
                 print(f"Build directory not found. Building {build_type}...")
@@ -202,13 +204,8 @@ class BuildOperations:
             print_separator(
                 f"END INSTALL ({build_type.upper()}) - {elapsed:.2f}s", "green"
             )
-        except subprocess.CalledProcessError as e:
-            print(colorize(f"Installation failed: {e}", "red"))
-            sys.exit(1)
-        except KeyError:
-            print(colorize(f"Invalid build type: {build_type}", "red"))
-            print(f"Available build types: {', '.join(CMAKE_BUILD_MAP.keys())}")
-            sys.exit(1)
+
+        _install(self, build_type, prefix)
 
     def clean_directory(self, directory: str) -> None:
         """Remove all files and subdirectories in the specified directory.

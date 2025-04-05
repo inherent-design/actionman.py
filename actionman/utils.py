@@ -8,7 +8,10 @@ This module provides utility functions used across the ActionMan package.
 
 import os
 import platform
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Callable
+from functools import wraps
+import sys
+import subprocess
 
 
 # CMake build type mapping
@@ -38,6 +41,22 @@ COLORS = {
     "bright_cyan": "\033[96m",
     "bright_white": "\033[97m",
 }
+
+
+def handle_errors(func: Callable) -> Callable:
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except KeyError as e:
+            print(colorize(f"Invalid build type: {e}", "red"))
+            print(f"Available build types: {', '.join(CMAKE_BUILD_MAP.keys())}")
+            sys.exit(1)
+        except subprocess.CalledProcessError as e:
+            print(colorize(f"Command failed: {e}", "red"))
+            sys.exit(1)
+
+    return wrapper
 
 
 def colorize(text: str, color: str) -> str:

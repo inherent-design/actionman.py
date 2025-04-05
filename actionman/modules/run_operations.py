@@ -8,11 +8,10 @@ This module contains functionality for running C++ executables built with CMake.
 
 import os
 import subprocess
-import sys
 import time
 from typing import List
 
-from ..utils import colorize, print_separator, run_command, CMAKE_BUILD_MAP
+from ..utils import colorize, print_separator, run_command, handle_errors
 from .build_operations import BuildOperations
 
 
@@ -31,6 +30,7 @@ class RunOperations:
         self.build_ops = build_ops
         self.build_dir = build_ops.build_dir
 
+    @handle_errors
     def run(self, build_type: str = "debug", execution_params: List[str] = []) -> None:
         """Run the executable for the specified build type.
 
@@ -76,8 +76,3 @@ class RunOperations:
             )
         except subprocess.CalledProcessError as e:
             print(colorize(f"Execution failed: {e}", "red"))
-            sys.exit(1)
-        except KeyError:
-            print(colorize(f"Invalid build type: {build_type}", "red"))
-            print(f"Available build types: {', '.join(CMAKE_BUILD_MAP.keys())}")
-            sys.exit(1)

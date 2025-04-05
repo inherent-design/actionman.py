@@ -40,7 +40,9 @@ class TestOperations:
         Raises:
             SystemExit: If tests fail or build type is invalid
         """
-        try:
+
+        @handle_errors
+        def _test(self, build_type: str, test_filter: str):
             # Ensure the build exists
             if not os.path.exists(self.build_dir):
                 print(f"Build directory not found. Building {build_type}...")
@@ -68,13 +70,8 @@ class TestOperations:
             print_separator(
                 f"END TEST OUTPUT ({build_type.upper()}) - {elapsed:.2f}s", "green"
             )
-        except subprocess.CalledProcessError as e:
-            print(colorize(f"Tests failed: {e}", "red"))
-            sys.exit(1)
-        except KeyError:
-            print(colorize(f"Invalid build type: {build_type}", "red"))
-            print(f"Available build types: {', '.join(CMAKE_BUILD_MAP.keys())}")
-            sys.exit(1)
+
+        _test(self, build_type, test_filter)
 
     def test_all(self) -> None:
         """Run tests for all configurations."""
