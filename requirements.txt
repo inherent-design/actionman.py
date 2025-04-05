@@ -2,7 +2,7 @@
 # No external dependencies required for core functionality
 
 # Development dependencies
-pyinstaller>=5.6.2  # For creating standalone executables
+pyinstaller>=6.0.0  # For creating standalone executables
 pytest>=7.0.0       # For testing
 black>=22.0.0       # For code formatting
 isort>=5.10.0       # For import sorting

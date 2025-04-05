@@ -31,7 +31,7 @@ setup(
     ],
     extras_require={
         "dev": [
-            "pyinstaller>=5.6.2",
+            "pyinstaller>=6.0.0",
             "pytest>=7.0.0",
             "black>=22.0.0",
             "isort>=5.10.0",
