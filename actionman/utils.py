@@ -8,8 +8,16 @@ This module provides utility functions used across the ActionMan package.
 
 import os
 import platform
-import sys
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple
+
+
+# CMake build type mapping
+CMAKE_BUILD_MAP = {
+    "debug": "Debug",
+    "profile": "RelWithDebInfo",
+    "release": "Release",
+}
+
 
 # ANSI color codes
 COLORS = {
@@ -130,7 +138,7 @@ def find_executable(name: str) -> Optional[str]:
 
 def ensure_dir_exists(directory: str) -> None:
     """Ensure a directory exists, creating it if necessary.
-    
+
     Args:
         directory (str): Directory path to ensure exists
     """
@@ -140,7 +148,7 @@ def ensure_dir_exists(directory: str) -> None:
 
 def print_error(message: str) -> None:
     """Print an error message in red.
-    
+
     Args:
         message (str): Error message to print
     """
@@ -149,7 +157,7 @@ def print_error(message: str) -> None:
 
 def print_success(message: str) -> None:
     """Print a success message in green.
-    
+
     Args:
         message (str): Success message to print
     """
@@ -158,7 +166,7 @@ def print_success(message: str) -> None:
 
 def print_warning(message: str) -> None:
     """Print a warning message in yellow.
-    
+
     Args:
         message (str): Warning message to print
     """
@@ -167,8 +175,27 @@ def print_warning(message: str) -> None:
 
 def print_info(message: str) -> None:
     """Print an info message in blue.
-    
+
     Args:
         message (str): Info message to print
     """
     print(colorize(f"INFO: {message}", "blue"))
+
+
+def run_command(cmd: List[str], cwd: str = None) -> Tuple[int, str, str]:
+    """Run a command and capture output.
+
+    Args:
+        cmd (List[str]): Command and arguments to run
+        cwd (str, optional): Directory to run command in. Defaults to None.
+
+    Returns:
+        Tuple[int, str, str]: Return code, stdout, stderr
+    """
+    import subprocess
+
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=cwd
+    )
+    stdout, stderr = process.communicate()
+    return process.returncode, stdout, stderr
