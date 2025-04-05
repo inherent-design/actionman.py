@@ -52,5 +52,5 @@ setup(
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Build Tools",
     ],
-    url="https://github.com/fabric-engine/actionman",
+    url="https://github.com/inherent-design/actionman",
 )
