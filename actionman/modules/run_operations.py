@@ -60,7 +60,7 @@ class RunOperations:
             start_time = time.time()
 
             cmd = [executable] + execution_params
-            returncode, stdout, stderr = run_command(cmd)
+            returncode, stdout, stderr = run_command(cmd, cwd=self.build_ops.cwd)
 
             if stdout:
                 print(stdout)

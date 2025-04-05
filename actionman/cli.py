@@ -8,6 +8,7 @@ including argument parsing and command execution.
 
 import sys
 import argparse
+import os
 from typing import List, Dict, Optional, Callable, Tuple
 
 from actionman.core import BuildManager
@@ -30,6 +31,14 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         nargs="?",
         default="help",
         help="Command to execute (clean, build, run, test, install, info, help)",
+    )
+    parser.add_argument(
+        "--cd",
+        "-c",
+        "-C",
+        dest="cwd",
+        help="Specify working directory for build operations",
+        default=os.getcwd(),
     )
     parser.add_argument("options", nargs="*", help="Options for the command")
     return parser.parse_args(args)
@@ -143,7 +152,7 @@ def main(args: List[str] = None) -> None:
     command = parsed_args.command.lower()
     options = parsed_args.options
 
-    manager = BuildManager()
+    manager = BuildManager(parsed_args.cwd)
 
     # Command dispatch dictionary
     commands: Dict[str, Callable] = {

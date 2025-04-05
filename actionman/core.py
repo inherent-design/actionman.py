@@ -29,11 +29,16 @@ class BuildManager:
         Args:
             cwd (Optional[str]): Current working directory. Defaults to os.getcwd().
         """
-        self.cwd = cwd or os.getcwd()
+        if cwd:
+            if not os.path.exists(cwd):
+                raise ValueError(f"Specified working directory does not exist: {cwd}")
+            if not os.path.isdir(cwd):
+                raise ValueError(f"Specified path is not a directory: {cwd}")
+        self.cwd = os.path.abspath(cwd) if cwd else os.getcwd()
         self.build_dir = os.path.join(self.cwd, "build")
 
         # Initialize operation modules
-        self.build_ops = BuildOperations(self.cwd, self.build_dir)
+        self.build_ops = BuildOperations(cwd=self.cwd, build_dir=self.build_dir)
         self.run_ops = RunOperations(self.build_ops)
         self.test_ops = TestOperations(self.build_ops)
         self.system_ops = SystemOperations()

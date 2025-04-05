@@ -56,7 +56,7 @@ class TestOperations:
                 cmd.extend(["-R", test_filter])
 
             print(f"Running: {' '.join(cmd)}")
-            returncode, stdout, stderr = run_command(cmd, self.build_dir)
+            returncode, stdout, stderr = run_command(cmd, cwd=self.build_ops.cwd)
 
             if stdout:
                 print(stdout)

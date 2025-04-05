@@ -36,7 +36,13 @@ class BuildOperations:
             build_dir (Optional[str]): Build directory. Defaults to os.path.join(cwd, "build").
         """
         self.cwd = cwd or os.getcwd()
-        self.build_dir = build_dir or os.path.join(self.cwd, "build")
+        if build_dir is not None:
+            if os.path.isabs(build_dir):
+                self.build_dir = build_dir
+            else:
+                self.build_dir = os.path.join(self.cwd, build_dir)
+        else:
+            self.build_dir = os.path.join(self.cwd, "build")
 
     def configure(self, build_type: str = "debug", flags: List[str] = []) -> None:
         """Configure the build environment using CMake.
@@ -78,7 +84,7 @@ class BuildOperations:
             ] + flags
 
             print(f"Running: {' '.join(cmd)}")
-            returncode, stdout, stderr = run_command(cmd)
+            returncode, stdout, stderr = run_command(cmd, cwd=self.cwd)
 
             if stdout:
                 print(stdout)
@@ -187,6 +193,8 @@ class BuildOperations:
 
             cmd = ["cmake", "--install", "."]
             if prefix:
+                if not os.path.isabs(prefix):
+                    prefix = os.path.join(self.cwd, prefix)
                 cmd.extend(["--prefix", prefix])
 
             print(f"Running: {' '.join(cmd)}")
@@ -213,6 +221,8 @@ class BuildOperations:
         Args:
             directory (str): Directory to clean
         """
+        if not os.path.isabs(directory):
+            directory = os.path.join(self.cwd, directory)
         if not os.path.exists(directory):
             print(f"Directory {directory} does not exist. Nothing to clean.")
             return
