@@ -4,6 +4,6 @@ This package provides a command-line interface for managing C++ projects
 built with CMake, including configuration, building, testing, and running.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.2"
 
 from actionman.core import BuildManager
