@@ -53,5 +53,5 @@ setup(
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Build Tools",
     ],
-    url="https://github.com/inherent-design/actionman",
+    url="https://github.com/inherent-design/actionman.py",
 )
