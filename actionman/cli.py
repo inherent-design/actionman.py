@@ -117,14 +117,48 @@ def main(args: List[str] = None) -> None:
     if args is None:
         args = sys.argv[1:]
 
+    # Create a temporary manager for help and version functions
+    temp_manager = BuildManager(os.getcwd())
+
+    # Custom help formatter to use our detailed help message
+    class CustomHelpFormatter(argparse.HelpFormatter):
+        def __init__(self, prog):
+            super().__init__(prog, max_help_position=40, width=80)
+
+        def format_help(self):
+            # Capture the detailed help message
+            import io
+            from contextlib import redirect_stdout
+
+            f = io.StringIO()
+            with redirect_stdout(f):
+                temp_manager.print_help()
+            return f.getvalue()
+
+    # Create parser with custom formatter
     parser = argparse.ArgumentParser(
-        description="ActionMan - Build and run management tool"
+        description="ActionMan - Build and run management tool",
+        formatter_class=CustomHelpFormatter,
+        add_help=True,
     )
+
+    # Add version argument
+    from actionman import __version__
+
+    # Custom version action that prints only the version
+    class VersionAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            print(f"ActionMan v{__version__}")
+            sys.exit(0)
+
+    parser.add_argument(
+        "--version", action=VersionAction, nargs=0, help="Show version information"
+    )
+
     parser.add_argument(
         "command",
         nargs="?",
-        default="help",
-        help="Command to execute (clean, build, run, test, install, info, help)",
+        help="Command to execute (clean, build, run, test, install, info)",
     )
     parser.add_argument(
         "--cd",
@@ -135,7 +169,18 @@ def main(args: List[str] = None) -> None:
         default=os.getcwd(),
     )
     parser.add_argument("options", nargs="*", help="Options for the command")
+
+    # If no arguments provided, show help and exit
+    if len(args) == 0:
+        parser.print_help()
+        return
+
     parsed_args = parser.parse_args(args)
+
+    # If no command provided, show help and exit
+    if parsed_args.command is None:
+        parser.print_help()
+        return
 
     command = parsed_args.command.lower()
     options = parsed_args.options
@@ -144,7 +189,6 @@ def main(args: List[str] = None) -> None:
 
     # Command dispatch dictionary
     commands: Dict[str, Callable] = {
-        "help": lambda: manager.print_help(),
         "clean": lambda: manager.clean(),
         "build": lambda: handle_build_command(manager, options),
         "run": lambda: handle_run_command(manager, options),
@@ -158,7 +202,7 @@ def main(args: List[str] = None) -> None:
         commands[command]()
     else:
         print(manager.colorize(f"Unknown command: {command}", "red"))
-        manager.print_help()
+        parser.print_help()
 
 
 if __name__ == "__main__":

@@ -57,6 +57,13 @@ class SystemOperations:
         print(colorize(f"ActionMan Build Tool v{__version__}", "bold"))
         print("\nUsage: actionman <command> [options]")
         print("")
+        print(colorize("Global options:", "bold"))
+        print("  --help                  Show this help message")
+        print("  --version               Show version information")
+        print(
+            "  --cd, -c, -C <path>     Specify working directory for build operations"
+        )
+        print("")
         print(colorize("Available commands:", "bold"))
 
         # Command definitions with aligned descriptions
@@ -82,7 +89,6 @@ class SystemOperations:
             ("  release", "Install release build"),
             ("  --prefix=<path>", "Installation prefix"),
             ("info", "Display system information"),
-            ("help", "Show this help message"),
         ]
 
         # Find the longest command to align descriptions
