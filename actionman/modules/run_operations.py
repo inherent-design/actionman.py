@@ -42,10 +42,10 @@ class RunOperations:
         """Locates the built executable in platform-specific build directories."""
         base_path = os.path.join(self.build_dir, CMAKE_BUILD_MAP[build_type])
         patterns = [
-            os.path.join(base_path, "bin", "Fabric*"),
-            os.path.join(base_path, "**", "Fabric*"),
-            os.path.join(self.build_dir, "bin", CMAKE_BUILD_MAP[build_type], "Fabric*"),
-            os.path.join(self.build_dir, "**", "Fabric*"),
+            os.path.join(base_path, "bin", "*"),
+            os.path.join(base_path, "**", "*"),
+            os.path.join(self.build_dir, "bin", CMAKE_BUILD_MAP[build_type], "*"),
+            os.path.join(self.build_dir, "**", "*"),
         ]
 
         for pattern in patterns:
@@ -89,7 +89,7 @@ class RunOperations:
                 else colorize("Running without arguments", "cyan")
             )
 
-            print_separator(f"BEGIN FABRIC OUTPUT ({build_type.upper()})", "cyan")
+            print_separator(f"BEGIN PROGRAM OUTPUT ({build_type.upper()})", "cyan")
             start_time = time.time()
 
             cmd = [executable] + execution_params
@@ -105,7 +105,7 @@ class RunOperations:
 
             elapsed = time.time() - start_time
             print_separator(
-                f"END FABRIC OUTPUT ({build_type.upper()}) - {elapsed:.2f}s", "green"
+                f"END PROGRAM OUTPUT ({build_type.upper()}) - {elapsed:.2f}s", "green"
             )
         except subprocess.CalledProcessError as e:
             print(colorize(f"Execution failed: {e}", "red"))

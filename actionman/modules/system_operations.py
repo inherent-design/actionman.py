@@ -9,6 +9,7 @@ This module contains functionality for displaying system information and help.
 import platform
 import os
 
+from .. import __version__
 from ..utils import colorize, print_separator, run_command
 
 
@@ -53,7 +54,7 @@ class SystemOperations:
 
     def print_help(self) -> None:
         """Print the help message with available commands."""
-        print(colorize("Fabric Engine - ActionMan Build Tool", "bold"))
+        print(colorize(f"ActionMan Build Tool v{__version__}", "bold"))
         print("\nUsage: actionman <command> [options]")
         print("")
         print(colorize("Available commands:", "bold"))

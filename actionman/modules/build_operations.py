@@ -215,8 +215,11 @@ class BuildOperations:
 
             # Verify installed executable
             install_bin_dir = os.path.join(prefix or "/usr/local", "bin")
-            installed_exe = os.path.join(install_bin_dir, "Fabric")
-            if not os.path.exists(installed_exe):
+            # Look for any installed executable in the bin directory
+            installed_files = (
+                os.listdir(install_bin_dir) if os.path.exists(install_bin_dir) else []
+            )
+            if not installed_files:
                 raise FileNotFoundError(
                     colorize(
                         f"Installed executable not found at {installed_exe}", "red"
