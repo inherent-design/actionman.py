@@ -139,10 +139,15 @@ def main(args: List[str] = None) -> None:
     parser = argparse.ArgumentParser(
         description="ActionMan - Build and run management tool",
         formatter_class=CustomHelpFormatter,
-        add_help=True,
+        add_help=False,
     )
 
-    # Add version argument
+    # Add help argument with both long and short forms
+    parser.add_argument(
+        "--help", "-h", action="help", help="Show this help message and exit"
+    )
+
+    # Add version argument with both long and short forms
     from actionman import __version__
 
     # Custom version action that prints only the version
@@ -152,7 +157,11 @@ def main(args: List[str] = None) -> None:
             sys.exit(0)
 
     parser.add_argument(
-        "--version", action=VersionAction, nargs=0, help="Show version information"
+        "--version",
+        "-v",
+        action=VersionAction,
+        nargs=0,
+        help="Show version information",
     )
 
     parser.add_argument(

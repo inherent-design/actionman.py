@@ -58,8 +58,8 @@ class SystemOperations:
         print("\nUsage: actionman <command> [options]")
         print("")
         print(colorize("Global options:", "bold"))
-        print("  --help                  Show this help message")
-        print("  --version               Show version information")
+        print("  --help, -h              Show this help message")
+        print("  --version, -v           Show version information")
         print(
             "  --cd, -c, -C <path>     Specify working directory for build operations"
         )

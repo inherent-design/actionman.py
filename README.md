@@ -53,8 +53,8 @@ python -m actionman.cli <command> [options]
 ### Global Options
 
 - `--cd`, `-c`, `-C` - Specify working directory for build operations (default: current directory)
-- `--help` - Show help message
-- `--version` - Show program version
+- `--help`, `-h` - Show help message
+- `--version`, `-v` - Show program version
 
 ### Available Commands
 
