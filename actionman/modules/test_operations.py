@@ -11,7 +11,13 @@ import subprocess
 import sys
 import time
 
-from ..utils import colorize, print_separator, CMAKE_BUILD_MAP
+from ..utils import (
+    colorize,
+    print_separator,
+    run_command,
+    handle_errors,
+    CMAKE_BUILD_MAP,
+)
 from .build_operations import BuildOperations
 
 
@@ -30,6 +36,7 @@ class TestOperations:
         self.build_ops = build_ops
         self.build_dir = build_ops.build_dir
 
+    @handle_errors
     def test(self, build_type: str = "debug", test_filter: str = "") -> None:
         """Run tests for the specified build type.
 
@@ -40,9 +47,7 @@ class TestOperations:
         Raises:
             SystemExit: If tests fail or build type is invalid
         """
-
-        @handle_errors
-        def _test(self, build_type: str, test_filter: str):
+        try:
             # Ensure the build exists
             if not os.path.exists(self.build_dir):
                 print(f"Build directory not found. Building {build_type}...")
@@ -70,8 +75,9 @@ class TestOperations:
             print_separator(
                 f"END TEST OUTPUT ({build_type.upper()}) - {elapsed:.2f}s", "green"
             )
-
-        _test(self, build_type, test_filter)
+        except subprocess.CalledProcessError as e:
+            print(colorize(f"Test execution failed: {e}", "red"))
+            raise
 
     def test_all(self) -> None:
         """Run tests for all configurations."""
