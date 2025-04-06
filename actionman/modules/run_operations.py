@@ -10,8 +10,15 @@ import os
 import subprocess
 import time
 from typing import List
+import glob
 
-from ..utils import colorize, print_separator, run_command, handle_errors
+from ..utils import (
+    colorize,
+    print_separator,
+    run_command,
+    handle_errors,
+    CMAKE_BUILD_MAP,
+)
 from .build_operations import BuildOperations
 
 
@@ -31,6 +38,26 @@ class RunOperations:
         self.build_dir = build_ops.build_dir
 
     @handle_errors
+    def _find_executable(self, build_type: str) -> str:
+        """Locates the built executable in platform-specific build directories."""
+        base_path = os.path.join(self.build_dir, CMAKE_BUILD_MAP[build_type])
+        patterns = [
+            os.path.join(base_path, "bin", "Fabric*"),
+            os.path.join(base_path, "**", "Fabric*"),
+            os.path.join(self.build_dir, "bin", CMAKE_BUILD_MAP[build_type], "Fabric*"),
+            os.path.join(self.build_dir, "**", "Fabric*"),
+        ]
+
+        for pattern in patterns:
+            for match in glob.glob(pattern):
+                if os.path.isfile(match) and os.access(match, os.R_OK):
+                    return match
+        raise FileNotFoundError(
+            f"Could not find built executable for {build_type} configuration. Searched:\n"
+            f"{chr(10).join(patterns)}"
+        )
+
+    @handle_errors
     def run(self, build_type: str = "debug", execution_params: List[str] = []) -> None:
         """Run the executable for the specified build type.
 
@@ -42,13 +69,19 @@ class RunOperations:
             SystemExit: If execution fails or build type is invalid
         """
         try:
-            executable = os.path.join(self.build_dir, "bin", "Fabric")
-            if os.name == "nt":
-                executable += ".exe"
-
-            if not os.path.exists(executable):
+            # First try to find the executable
+            try:
+                executable = self._find_executable(build_type)
+            except FileNotFoundError:
+                # If not found, build it first
                 print(f"Executable not found. Building {build_type}...")
                 self.build_ops.build(build_type)
+                # Try to find it again after building
+                executable = self._find_executable(build_type)
+
+            # Ensure it's executable
+            if not os.access(executable, os.X_OK):
+                os.chmod(executable, 0o755)
 
             print(
                 colorize(f"Running with arguments: {execution_params}", "cyan")

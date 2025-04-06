@@ -213,6 +213,32 @@ class BuildOperations:
                 f"END INSTALL ({build_type.upper()}) - {elapsed:.2f}s", "green"
             )
 
+            # Verify installed executable
+            install_bin_dir = os.path.join(prefix or "/usr/local", "bin")
+            installed_exe = os.path.join(install_bin_dir, "Fabric")
+            if not os.path.exists(installed_exe):
+                raise FileNotFoundError(
+                    colorize(
+                        f"Installed executable not found at {installed_exe}", "red"
+                    )
+                )
+
+            # Ensure executable permissions
+            try:
+                os.chmod(installed_exe, 0o755)
+                print(colorize(f"Set executable permissions: {installed_exe}", "cyan"))
+
+                # Basic version check
+                returncode, stdout, stderr = run_command(
+                    [installed_exe, "--version"], install_bin_dir
+                )
+                if returncode == 0:
+                    print(colorize(f"Installation verified: {stdout.strip()}", "green"))
+                else:
+                    print(colorize(f"Version check failed: {stderr}", "yellow"))
+            except Exception as e:
+                print(colorize(f"Post-install verification failed: {e}", "yellow"))
+
         _install(self, build_type, prefix)
 
     def clean_directory(self, directory: str) -> None:

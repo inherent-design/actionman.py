@@ -12,36 +12,7 @@ import os
 from typing import List, Dict, Optional, Callable, Tuple
 
 from actionman.core import BuildManager
-
-
-def parse_args(args: List[str]) -> argparse.Namespace:
-    """Parse command line arguments.
-
-    Args:
-        args (List[str]): Command line arguments
-
-    Returns:
-        argparse.Namespace: Parsed arguments
-    """
-    parser = argparse.ArgumentParser(
-        description="ActionMan - Build and run management tool", add_help=False
-    )
-    parser.add_argument(
-        "command",
-        nargs="?",
-        default="help",
-        help="Command to execute (clean, build, run, test, install, info, help)",
-    )
-    parser.add_argument(
-        "--cd",
-        "-c",
-        "-C",
-        dest="cwd",
-        help="Specify working directory for build operations",
-        default=os.getcwd(),
-    )
-    parser.add_argument("options", nargs="*", help="Options for the command")
-    return parser.parse_args(args)
+from actionman.utils import CMAKE_BUILD_MAP
 
 
 def extract_prefix(options: List[str]) -> Tuple[List[str], Optional[str]]:
@@ -90,7 +61,7 @@ def handle_run_command(manager: BuildManager, options: List[str]) -> None:
         manager.run("debug", [])
         return
 
-    if options[0] in manager.CMAKE_BUILD_MAP:
+    if options[0] in CMAKE_BUILD_MAP:
         build_type = options[0]
         execution_params = options[1:]
     else:
@@ -115,7 +86,7 @@ def handle_test_command(manager: BuildManager, options: List[str]) -> None:
     test_filter = ""
 
     if options:
-        if options[0] in manager.CMAKE_BUILD_MAP:
+        if options[0] in CMAKE_BUILD_MAP:
             build_type = options[0]
             if len(options) > 1:
                 test_filter = options[1]
@@ -133,9 +104,7 @@ def handle_install_command(manager: BuildManager, options: List[str]) -> None:
         options (List[str]): Command options
     """
     options, prefix = extract_prefix(options)
-    build_type = (
-        options[0] if options and options[0] in manager.CMAKE_BUILD_MAP else "debug"
-    )
+    build_type = options[0] if options and options[0] in CMAKE_BUILD_MAP else "debug"
     manager.install(build_type, prefix)
 
 
@@ -148,7 +117,26 @@ def main(args: List[str] = None) -> None:
     if args is None:
         args = sys.argv[1:]
 
-    parsed_args = parse_args(args)
+    parser = argparse.ArgumentParser(
+        description="ActionMan - Build and run management tool"
+    )
+    parser.add_argument(
+        "command",
+        nargs="?",
+        default="help",
+        help="Command to execute (clean, build, run, test, install, info, help)",
+    )
+    parser.add_argument(
+        "--cd",
+        "-c",
+        "-C",
+        dest="cwd",
+        help="Specify working directory for build operations",
+        default=os.getcwd(),
+    )
+    parser.add_argument("options", nargs="*", help="Options for the command")
+    parsed_args = parser.parse_args(args)
+
     command = parsed_args.command.lower()
     options = parsed_args.options
 

@@ -36,7 +36,16 @@ def build(clean=False, debug=False, output_name="actionman"):
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
 
     # Build the executable
-    build_command = ["pyinstaller", "--onefile", "--name", output_name, "main.py"]
+    build_command = [
+        "pyinstaller",
+        "--onefile",
+        "--name",
+        output_name,
+        "--collect-all=actionman",
+        "-m",
+        "actionman",
+        "actionman/cli.py",
+    ]
 
     # Add debug flag if requested
     if debug:
