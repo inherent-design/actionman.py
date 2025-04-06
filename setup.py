@@ -18,11 +18,10 @@ except:
     long_description = "ActionMan - Build and run management tool for C++ projects"
 
 setup(
-    packages=find_packages(include=["actionman", "actionman.*"]),
+    packages=find_packages(),
     package_dir={"": "."},
     name="actionman",
     version=version,
-    packages=find_packages(),
     entry_points={
         "console_scripts": [
             "actionman=actionman.cli:main",
