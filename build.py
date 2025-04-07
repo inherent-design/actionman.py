@@ -4,6 +4,9 @@ import os
 import subprocess
 import sys
 import argparse
+import site
+from pathlib import Path
+from actionman.utils import ensure_virtualenv
 
 
 def build(clean=False, debug=False, output_name="actionman"):
@@ -28,12 +31,16 @@ def build(clean=False, debug=False, output_name="actionman"):
             if file.endswith(".spec"):
                 os.remove(file)
 
+    # Ensure we're using a virtualenv
+    python_exe = ensure_virtualenv()
+
     # Ensure PyInstaller is installed
     try:
+        # Try to import from the current environment
         import PyInstaller
     except ImportError:
         print("PyInstaller not found. Installing...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
+        subprocess.check_call([python_exe, "-m", "pip", "install", "pyinstaller"])
 
     # Build the executable
     build_command = [

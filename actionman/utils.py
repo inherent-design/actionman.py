@@ -8,6 +8,8 @@ This module provides utility functions used across the ActionMan package.
 
 import os
 import platform
+import venv
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Callable
 from functools import wraps
 import sys
@@ -94,6 +96,46 @@ def print_separator(message: str = "", color: str = "bold", width: int = 80) -> 
         )
     else:
         print("=" * width)
+
+
+def ensure_virtualenv() -> str:
+    """Check if running in a virtualenv, and create one if not.
+
+    Returns:
+        str: Path to the Python executable to use for pip operations.
+    """
+    # Check if we're already in a virtualenv
+    in_venv = hasattr(sys, "real_prefix") or (
+        hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix
+    )
+
+    if in_venv:
+        print("Already running in a virtual environment.")
+        return sys.executable
+
+    # Create a virtualenv if not in one
+    venv_dir = Path(os.path.abspath(os.path.dirname(os.path.dirname(__file__)))) / "env"
+    venv_python = (
+        venv_dir / ("Scripts" if sys.platform == "win32" else "bin") / "python"
+    )
+
+    if not venv_dir.exists():
+        print("Creating virtual environment in ./env directory...")
+        venv.create(venv_dir, with_pip=True)
+        print(f"Virtual environment created at {venv_dir}")
+    elif not venv_python.exists():
+        print(
+            "Existing env directory found but appears to be incomplete. Recreating..."
+        )
+        import shutil
+
+        shutil.rmtree(venv_dir)
+        venv.create(venv_dir, with_pip=True)
+        print(f"Virtual environment recreated at {venv_dir}")
+    else:
+        print(f"Using existing virtual environment at {venv_dir}")
+
+    return str(venv_python)
 
 
 def get_system_info() -> Dict[str, str]:

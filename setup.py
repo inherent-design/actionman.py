@@ -1,5 +1,13 @@
 from setuptools import setup, find_packages
 import os
+import sys
+import subprocess
+from pathlib import Path
+from actionman.utils import ensure_virtualenv
+
+
+# Ensure we're using a virtualenv
+python_exe = ensure_virtualenv()
 
 # Get version from __init__.py
 with open(os.path.join("actionman", "__init__.py"), "r") as f:
@@ -32,11 +40,11 @@ setup(
     ],
     extras_require={
         "dev": [
-            "pyinstaller>=6.0.0",
-            "pytest>=7.0.0",
-            "black>=22.0.0",
-            "isort>=5.10.0",
-            "flake8>=4.0.0",
+            "pyinstaller>=6.12.0",
+            "pytest>=8.3.5",
+            "black>=25.1.0",
+            "isort>=6.0.1",
+            "ruff>=0.11.4",
         ],
     },
     python_requires=">=3.6",

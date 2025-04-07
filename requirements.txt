@@ -2,8 +2,7 @@
 # No external dependencies required for core functionality
 
 # Development dependencies
-pyinstaller>=6.0.0  # For creating standalone executables
-pytest>=7.0.0       # For testing
-black>=22.0.0       # For code formatting
-isort>=5.10.0       # For import sorting
-flake8>=4.0.0       # For linting
+pyinstaller>=6.12.0
+pytest>=8.3.5
+isort>=6.0.1
+ruff>=0.11.4

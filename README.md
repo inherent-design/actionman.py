@@ -30,6 +30,8 @@ pip install actionman
    pip install -e .
    ```
 
+See [VIRTUALENV.md](VIRTUALENV.md) for details on how ActionMan uses virtual environments.
+
 ### As a Local Package
 
 ```bash
