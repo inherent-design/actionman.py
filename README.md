@@ -121,7 +121,7 @@ python build.py
 Or with options:
 
 ```bash
-python build.py --clean --debug
+python build.py --clean --debug --name custom_name
 ```
 
 The executable will be created in the `dist` directory.

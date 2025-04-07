@@ -2,16 +2,13 @@
 
 import os
 import subprocess
-import sys
 import argparse
-import site
-from pathlib import Path
 from actionman.utils import ensure_virtualenv
 
 
 def build(clean=False, debug=False, output_name="actionman"):
     """
-    Build a standalone executable using PyInstaller.
+    Build a standalone executable using cx_Freeze.
 
     Args:
         clean (bool): Whether to clean before building
@@ -27,38 +24,34 @@ def build(clean=False, debug=False, output_name="actionman"):
 
         shutil.rmtree("dist", ignore_errors=True)
         shutil.rmtree("build", ignore_errors=True)
-        for file in os.listdir("."):
-            if file.endswith(".spec"):
-                os.remove(file)
 
     # Ensure we're using a virtualenv
     python_exe = ensure_virtualenv()
 
-    # Ensure PyInstaller is installed
+    # Ensure cx_Freeze is installed
     try:
         # Try to import from the current environment
-        import PyInstaller
+        import cx_Freeze
     except ImportError:
-        print("PyInstaller not found. Installing...")
-        subprocess.check_call([python_exe, "-m", "pip", "install", "pyinstaller"])
+        print("cx_Freeze not found. Installing...")
+        subprocess.check_call([python_exe, "-m", "pip", "install", "cx_Freeze==8.1.0"])
 
     # Build the executable
     build_command = [
-        "pyinstaller",
-        "--onefile",
-        "--name",
-        output_name,
-        "--collect-all=actionman",
-        "-m",
-        "actionman",
-        "actionman/cli.py",
+        python_exe,
+        "setup.py",
+        "build_exe",
     ]
+
+    # Set environment variables for build options
+    env = os.environ.copy()
+    env["ACTIONMAN_OUTPUT_NAME"] = output_name
 
     # Add debug flag if requested
     if debug:
-        build_command.insert(1, "--debug")
+        env["ACTIONMAN_DEBUG"] = "1"
 
-    subprocess.check_call(build_command)
+    subprocess.check_call(build_command, env=env)
 
     # Check if build was successful
     executable_path = os.path.join("dist", output_name)
