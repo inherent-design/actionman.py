@@ -12,7 +12,7 @@ from typing import List, Optional
 
 from .modules.build_operations import BuildOperations
 from .modules.run_operations import RunOperations
-from .modules.test_operations import TestOperations
+from .modules.test_operations import TestingOperations
 from .modules.system_operations import SystemOperations
 
 
@@ -40,7 +40,7 @@ class BuildManager:
         # Initialize operation modules
         self.build_ops = BuildOperations(cwd=self.cwd, build_dir=self.build_dir)
         self.run_ops = RunOperations(self.build_ops)
-        self.test_ops = TestOperations(self.build_ops)
+        self.test_ops = TestingOperations(self.build_ops)
         self.system_ops = SystemOperations()
 
     def configure(self, build_type: str = "debug", flags: List[str] = []) -> None:

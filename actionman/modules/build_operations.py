@@ -216,31 +216,33 @@ class BuildOperations:
             # Verify installed executable
             install_bin_dir = os.path.join(prefix or "/usr/local", "bin")
             # Look for any installed executable in the bin directory
-            installed_files = (
-                os.listdir(install_bin_dir) if os.path.exists(install_bin_dir) else []
-            )
-            if not installed_files:
-                raise FileNotFoundError(
-                    colorize(
-                        f"Installed executable not found at {installed_exe}", "red"
-                    )
-                )
+            if os.path.exists(install_bin_dir):
+                installed_files = os.listdir(install_bin_dir)
+                if installed_files:
+                    # Get the first executable file for verification
+                    installed_exe = os.path.join(install_bin_dir, installed_files[0])
 
-            # Ensure executable permissions
-            try:
-                os.chmod(installed_exe, 0o755)
-                print(colorize(f"Set executable permissions: {installed_exe}", "cyan"))
+                    # Ensure executable permissions
+                    try:
+                        os.chmod(installed_exe, 0o755)
+                        print(colorize(f"Set executable permissions: {installed_exe}", "cyan"))
 
-                # Basic version check
-                returncode, stdout, stderr = run_command(
-                    [installed_exe, "--version"], install_bin_dir
-                )
-                if returncode == 0:
-                    print(colorize(f"Installation verified: {stdout.strip()}", "green"))
+                        # Basic version check
+                        returncode, stdout, stderr = run_command(
+                            [installed_exe, "--version"], install_bin_dir
+                        )
+                        if returncode == 0:
+                            print(colorize(f"Installation verified: {stdout.strip()}", "green"))
+                        else:
+                            print(colorize(f"Version check failed: {stderr}", "yellow"))
+                    except Exception as e:
+                        print(colorize(f"Post-install verification failed: {e}", "yellow"))
                 else:
-                    print(colorize(f"Version check failed: {stderr}", "yellow"))
-            except Exception as e:
-                print(colorize(f"Post-install verification failed: {e}", "yellow"))
+                    print(colorize(f"No installed files found in {install_bin_dir}, but directory exists", "yellow"))
+            else:
+                print(colorize(f"Install directory {install_bin_dir} not found, skipping verification", "yellow"))
+
+            # The code below is now handled in the conditional blocks above
 
         _install(self, build_type, prefix)
 
@@ -250,26 +252,34 @@ class BuildOperations:
         Args:
             directory (str): Directory to clean
         """
-        if not os.path.isabs(directory):
-            directory = os.path.join(self.cwd, directory)
-        if not os.path.exists(directory):
-            print(f"Directory {directory} does not exist. Nothing to clean.")
-            return
+        @handle_errors
+        def _clean_directory(self, directory: str):
+            if not os.path.isabs(directory):
+                directory = os.path.join(self.cwd, directory)
+            if not os.path.exists(directory):
+                print(f"Directory {directory} does not exist. Nothing to clean.")
+                return
 
-        try:
-            print(f"Cleaning {os.path.basename(directory)} directory...")
-            shutil.rmtree(directory, ignore_errors=True)
-            print(
-                colorize(f"Cleaned {os.path.basename(directory)} directory.", "green")
-            )
-        except Exception as e:
-            print(
-                colorize(
-                    f"An error occurred during cleaning {os.path.basename(directory)}: {e}",
-                    "red",
+            try:
+                print(f"Cleaning {os.path.basename(directory)} directory...")
+                shutil.rmtree(directory, ignore_errors=True)
+                print(
+                    colorize(f"Cleaned {os.path.basename(directory)} directory.", "green")
                 )
-            )
+            except Exception as e:
+                print(
+                    colorize(
+                        f"An error occurred during cleaning {os.path.basename(directory)}: {e}",
+                        "red",
+                    )
+                )
+        
+        _clean_directory(self, directory)
 
     def clean(self) -> None:
         """Clean the build directory."""
-        self.clean_directory(self.build_dir)
+        @handle_errors
+        def _clean(self):
+            self.clean_directory(self.build_dir)
+            
+        _clean(self)

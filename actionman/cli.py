@@ -6,13 +6,68 @@ This module provides the command-line interface for the ActionMan build tool,
 including argument parsing and command execution.
 """
 
+import os
 import sys
 import argparse
-import os
 from typing import List, Dict, Optional, Callable, Tuple
 
 from actionman.core import BuildManager
 from actionman.utils import CMAKE_BUILD_MAP
+from actionman import __version__
+
+
+def parse_args(args: List[str] = None) -> argparse.Namespace:
+    """Parse command line arguments.
+
+    Args:
+        args (List[str], optional): Command line arguments. Defaults to None.
+
+    Returns:
+        argparse.Namespace: Parsed arguments with command, options, and working_dir attributes
+    """
+    args = sys.argv[1:] if args is None else args
+
+    # Create parser
+    parser = argparse.ArgumentParser(
+        description="ActionMan - Build and run management tool",
+        add_help=False,
+    )
+
+    # Add help argument with both long and short forms
+    parser.add_argument(
+        "--help", "-h", action="help", help="Show this help message and exit"
+    )
+
+    # Add version argument with both long and short forms
+    # Custom version action that prints only the version
+    class VersionAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            print(f"ActionMan v{__version__}")
+            sys.exit(0)
+
+    parser.add_argument(
+        "--version",
+        "-v",
+        action=VersionAction,
+        nargs=0,
+        help="Show version information",
+    )
+
+    parser.add_argument(
+        "command",
+        nargs="?",
+        help="Command to execute (clean, build, run, test, install, info)",
+    )
+    parser.add_argument(
+        "--cd",
+        "-c",
+        "-C",
+        dest="working_dir",
+        help="Specify working directory for build operations",
+    )
+    parser.add_argument("options", nargs="*", help="Options for the command")
+
+    return parser.parse_args(args)
 
 
 def extract_prefix(options: List[str]) -> Tuple[List[str], Optional[str]]:
@@ -46,8 +101,9 @@ def handle_build_command(manager: BuildManager, options: List[str]) -> None:
     if options and options[0] == "all":
         manager.build_all()
     else:
-        build_type = options[0] if options else "debug"
-        manager.build(build_type)
+        build_type = options[0] if options and options[0] in CMAKE_BUILD_MAP else "debug"
+        build_flags = options[1:] if len(options) > 1 else []
+        manager.build(build_type, build_flags)
 
 
 def handle_run_command(manager: BuildManager, options: List[str]) -> None:
@@ -57,16 +113,15 @@ def handle_run_command(manager: BuildManager, options: List[str]) -> None:
         manager (BuildManager): The build manager instance
         options (List[str]): Command options
     """
-    if not options:
-        manager.run("debug", [])
-        return
+    build_type = "debug"
+    execution_params = []
 
-    if options[0] in CMAKE_BUILD_MAP:
-        build_type = options[0]
-        execution_params = options[1:]
-    else:
-        build_type = "debug"
-        execution_params = options
+    if options:
+        if options[0] in CMAKE_BUILD_MAP:
+            build_type = options[0]
+            execution_params = options[1:]
+        else:
+            execution_params = options
 
     manager.run(build_type, execution_params)
 
@@ -114,87 +169,30 @@ def main(args: List[str] = None) -> None:
     Args:
         args (List[str], optional): Command line arguments. Defaults to None.
     """
-    if args is None:
-        args = sys.argv[1:]
+    args = sys.argv[1:] if args is None else args
 
-    # Create a temporary manager for help and version functions
-    temp_manager = BuildManager(os.getcwd())
-
-    # Custom help formatter to use our detailed help message
-    class CustomHelpFormatter(argparse.HelpFormatter):
-        def __init__(self, prog):
-            super().__init__(prog, max_help_position=40, width=80)
-
-        def format_help(self):
-            # Capture the detailed help message
-            import io
-            from contextlib import redirect_stdout
-
-            f = io.StringIO()
-            with redirect_stdout(f):
-                temp_manager.print_help()
-            return f.getvalue()
-
-    # Create parser with custom formatter
-    parser = argparse.ArgumentParser(
-        description="ActionMan - Build and run management tool",
-        formatter_class=CustomHelpFormatter,
-        add_help=False,
-    )
-
-    # Add help argument with both long and short forms
-    parser.add_argument(
-        "--help", "-h", action="help", help="Show this help message and exit"
-    )
-
-    # Add version argument with both long and short forms
-    from actionman import __version__
-
-    # Custom version action that prints only the version
-    class VersionAction(argparse.Action):
-        def __call__(self, parser, namespace, values, option_string=None):
-            print(f"ActionMan v{__version__}")
-            sys.exit(0)
-
-    parser.add_argument(
-        "--version",
-        "-v",
-        action=VersionAction,
-        nargs=0,
-        help="Show version information",
-    )
-
-    parser.add_argument(
-        "command",
-        nargs="?",
-        help="Command to execute (clean, build, run, test, install, info)",
-    )
-    parser.add_argument(
-        "--cd",
-        "-c",
-        "-C",
-        dest="cwd",
-        help="Specify working directory for build operations",
-        default=os.getcwd(),
-    )
-    parser.add_argument("options", nargs="*", help="Options for the command")
+    # Helper function to show help and exit
+    def show_help():
+        temp_manager = BuildManager(os.getcwd())
+        temp_manager.print_help()
+        return
 
     # If no arguments provided, show help and exit
     if len(args) == 0:
-        parser.print_help()
-        return
+        return show_help()
 
-    parsed_args = parser.parse_args(args)
+    parsed_args = parse_args(args)
 
     # If no command provided, show help and exit
     if parsed_args.command is None:
-        parser.print_help()
-        return
+        return show_help()
 
     command = parsed_args.command.lower()
     options = parsed_args.options
 
-    manager = BuildManager(parsed_args.cwd)
+    manager = BuildManager(
+        parsed_args.working_dir if parsed_args.working_dir else os.getcwd()
+    )
 
     # Command dispatch dictionary
     commands: Dict[str, Callable] = {
@@ -210,8 +208,9 @@ def main(args: List[str] = None) -> None:
     if command in commands:
         commands[command]()
     else:
-        print(manager.colorize(f"Unknown command: {command}", "red"))
-        parser.print_help()
+        print(f"Unknown command: {command}")
+        manager.print_help()
+        sys.exit(1)
 
 
 if __name__ == "__main__":

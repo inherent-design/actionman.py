@@ -10,6 +10,7 @@ import os
 import subprocess
 import sys
 import time
+from typing import List, Tuple
 
 from ..utils import (
     colorize,
@@ -21,7 +22,7 @@ from ..utils import (
 from .build_operations import BuildOperations
 
 
-class TestOperations:
+class TestingOperations:
     """Handles test operations for C++ projects using CMake.
 
     This class provides methods for testing C++ projects.
@@ -47,42 +48,40 @@ class TestOperations:
         Raises:
             SystemExit: If tests fail or build type is invalid
         """
-        try:
-            # Ensure the build exists
-            if not os.path.exists(self.build_dir):
-                print(f"Build directory not found. Building {build_type}...")
-                self.build_ops.build(build_type)
+        # Ensure the build exists
+        if not os.path.exists(self.build_dir):
+            print(f"Build directory not found. Building {build_type}...")
+            self.build_ops.build(build_type)
 
-            print_separator(f"BEGIN TEST OUTPUT ({build_type.upper()})", "cyan")
-            start_time = time.time()
+        print_separator(f"BEGIN TEST OUTPUT ({build_type.upper()})", "cyan")
+        start_time = time.time()
 
-            cmd = ["ctest", "--output-on-failure"]
-            if test_filter:
-                cmd.extend(["-R", test_filter])
+        cmd = ["ctest", "--output-on-failure"]
+        if test_filter:
+            cmd.extend(["-R", test_filter])
 
-            print(f"Running: {' '.join(cmd)}")
-            returncode, stdout, stderr = run_command(cmd, cwd=self.build_ops.cwd)
+        print(f"Running: {' '.join(cmd)}")
+        returncode, stdout, stderr = run_command(cmd, cwd=self.build_ops.cwd)
 
-            if stdout:
-                print(stdout)
-            if stderr:
-                print(colorize(stderr, "red" if returncode != 0 else "yellow"))
+        if stdout:
+            print(stdout)
+        if stderr:
+            print(colorize(stderr, "red" if returncode != 0 else "yellow"))
 
-            if returncode != 0:
-                raise subprocess.CalledProcessError(returncode, cmd)
+        if returncode != 0:
+            print(colorize(f"Test execution failed with code {returncode}", "red"))
+            raise subprocess.CalledProcessError(returncode, cmd)
 
-            elapsed = time.time() - start_time
-            print_separator(
-                f"END TEST OUTPUT ({build_type.upper()}) - {elapsed:.2f}s", "green"
-            )
-        except subprocess.CalledProcessError as e:
-            print(colorize(f"Test execution failed: {e}", "red"))
-            raise
+        elapsed = time.time() - start_time
+        print_separator(
+            f"END TEST OUTPUT ({build_type.upper()}) - {elapsed:.2f}s", "green"
+        )
 
+    @handle_errors
     def test_all(self) -> None:
         """Run tests for all configurations."""
         success = True
-        results = []
+        results: List[Tuple[str, bool, float]] = []
 
         for build_type in CMAKE_BUILD_MAP.keys():
             print(f"\nTesting {build_type} configuration...")
@@ -91,7 +90,7 @@ class TestOperations:
                 self.test(build_type)
                 elapsed = time.time() - start_time
                 results.append((build_type, True, elapsed))
-            except SystemExit:
+            except (subprocess.CalledProcessError, SystemExit):
                 elapsed = time.time() - start_time
                 results.append((build_type, False, elapsed))
                 success = False
@@ -106,3 +105,7 @@ class TestOperations:
 
         if not success:
             sys.exit(1)
+
+
+# For backward compatibility
+TestOperations = TestingOperations

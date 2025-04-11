@@ -8,7 +8,6 @@ This module provides utility functions used across the ActionMan package.
 
 import os
 import platform
-import venv
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Callable
 from functools import wraps
@@ -86,14 +85,28 @@ def print_separator(message: str = "", color: str = "bold", width: int = 80) -> 
         width (int, optional): Width of the separator line. Defaults to 80.
     """
     if message:
-        padding = (width - len(message) - 2) // 2
-        print(
-            "=" * padding
-            + " "
-            + colorize(message, color)
-            + " "
-            + "=" * (width - padding - len(message) - 2)
-        )
+        # Calculate the length of the message without color codes
+        message_display_len = len(message)
+        # Get the colored message first so we can use it in the final output
+        colored_message = colorize(message, color)
+        # Calculate the total length of non-message parts (equals signs and spaces)
+        non_message_len = width - message_display_len
+        # We need at least 2 spaces (one on each side of the message)
+        if non_message_len < 2:
+            # If message is too long, truncate it
+            message = message[: width - 4] + "..."
+            message_display_len = len(message)
+            non_message_len = width - message_display_len
+            # Update colored message with truncated message
+            colored_message = colorize(message, color)
+
+        # Calculate padding, ensuring we have at least one equals sign on each side
+        padding = max(1, (non_message_len - 2) // 2)
+        right_padding = max(1, non_message_len - 2 - padding)
+
+        # Create the separator
+        separator = "=" * padding + " " + colored_message + " " + "=" * right_padding
+        print(separator)
     else:
         print("=" * width)
 
@@ -113,7 +126,8 @@ def ensure_virtualenv() -> str:
         print("Already running in a virtual environment.")
         return sys.executable
 
-    # Create a virtualenv if not in one
+    # For creating a virtualenv, use the subprocess module to call python -m venv
+    # instead of importing venv directly
     venv_dir = Path(os.path.abspath(os.path.dirname(os.path.dirname(__file__)))) / "env"
     venv_python = (
         venv_dir / ("Scripts" if sys.platform == "win32" else "bin") / "python"
@@ -121,7 +135,8 @@ def ensure_virtualenv() -> str:
 
     if not venv_dir.exists():
         print("Creating virtual environment in ./env directory...")
-        venv.create(venv_dir, with_pip=True)
+        import subprocess
+        subprocess.run([sys.executable, "-m", "venv", str(venv_dir)], check=True)
         print(f"Virtual environment created at {venv_dir}")
     elif not venv_python.exists():
         print(
@@ -130,7 +145,8 @@ def ensure_virtualenv() -> str:
         import shutil
 
         shutil.rmtree(venv_dir)
-        venv.create(venv_dir, with_pip=True)
+        import subprocess
+        subprocess.run([sys.executable, "-m", "venv", str(venv_dir)], check=True)
         print(f"Virtual environment recreated at {venv_dir}")
     else:
         print(f"Using existing virtual environment at {venv_dir}")
@@ -255,8 +271,5 @@ def run_command(cmd: List[str], cwd: str = None) -> Tuple[int, str, str]:
     """
     import subprocess
 
-    process = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=cwd
-    )
-    stdout, stderr = process.communicate()
-    return process.returncode, stdout, stderr
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
+    return result.returncode, result.stdout, result.stderr

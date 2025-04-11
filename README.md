@@ -2,7 +2,7 @@
 
 ActionMan is a build and run management tool for C++ projects built with CMake. It provides a command-line interface for configuring, building, testing, and running C++ projects.
 
-[![Version](https://img.shields.io/badge/version-0.2.2-blue.svg)](https://github.com/zer0cell/actionman)
+[![Version](https://img.shields.io/badge/version-0.3.1-blue.svg)](https://github.com/zer0cell/actionman)
 
 ## Features
 
@@ -30,7 +30,7 @@ pip install actionman
    pip install -e .
    ```
 
-See [VIRTUALENV.md](VIRTUALENV.md) for details on how ActionMan uses virtual environments.
+ActionMan can be installed in a virtual environment for isolated development and testing.
 
 ### As a Local Package
 
@@ -110,29 +110,28 @@ actionman install release --prefix=/usr/local
 actionman info
 ```
 
-## Building a Standalone Executable
+## Contributing
 
-To create a single-file executable, use the included build script:
-
-```bash
-python build.py
-```
-
-Or with options:
-
-```bash
-python build.py --clean --debug --name custom_name
-```
-
-The executable will be created in the `dist` directory.
+Contributions to ActionMan are welcome! Please feel free to submit a Pull Request.
 
 ## Development
 
-For development, install the package in editable mode with development dependencies:
+For development, install the package in editable mode:
 
 ```bash
-pip install -e .[dev]
+pip install -e .
 ```
+
+Install development dependencies from requirements.txt:
+
+```bash
+pip install -r requirements.txt
+```
+
+The development dependencies include:
+- pytest - For running tests
+- isort - For sorting imports
+- ruff - For linting
 
 ## License
 
